@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Şifreyi hashleyin
+  
     const hashedPassword = await argon2.hash(password); // Hashlenmiş şifreyi kaydedin
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
@@ -50,10 +50,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    // JWT token oluşturuluyor
+
     const token = jwt.sign(
       { id: user._id, username: user.username },
-      process.env.JWT_SECRET, // .env dosyasındaki JWT_SECRET'e dikkat edin
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
