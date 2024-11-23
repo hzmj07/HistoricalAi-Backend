@@ -10,7 +10,7 @@ route.post('/generateText', async (req, res) => {
     try {
       const { pront } = req.body;
       if (pront) {
-        const istek = `${pront}'in hayatını giriş gelişme sonuç olarak hikaye şeklinde , başlık koymayı ve kaynak belirtmeyi unutma `
+        const istek = pront
         const result = await model.generateContent([istek]);
         res.status(200).json({ message:  result  });
       }else{
