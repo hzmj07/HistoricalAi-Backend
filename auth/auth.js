@@ -30,36 +30,48 @@ router.post('/register', async (req, res) => {
 });
 
 // Login route
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
-    }
-
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ message: "User not found" });
     }
 
-    // Şifreyi karşılaştırma
+    // Şifre doğrulama
     const isMatch = await argon2.verify(user.password, password);
-    console.log(isMatch);
-    
+
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid password' });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
-
-    const token = jwt.sign(
+    // Token'ları oluştur
+    const accessToken = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
 
-    res.status(200).json({ token,user, message: 'Login successful' });
+    const refreshToken = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "48h" }
+    );
+
+    res.status(200).json({
+      accessToken,
+      refreshToken,
+      user,
+      message: "Login successful",
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
