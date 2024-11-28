@@ -1,5 +1,5 @@
 import express from 'express';
-import User from '../model/user.js'; // Kullanıcı modeli import edilir
+import {User} from '../model/user.js'; // Kullanıcı modeli import edilir
 import jwt from 'jsonwebtoken';
 import argon2 from 'argon2';
 

@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import express from "express";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
+import { UserDataSema } from "../model/user.js";
 
 const route = express.Router();
 const api = "AIzaSyA-HGFF6SL2-XFZVedFHj-su17VqoWRKPM";
@@ -9,14 +9,7 @@ const genAI = new GoogleGenerativeAI(api);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // MongoDB şema tanımı
-const UserDataSchema = new mongoose.Schema(
-  {
-    _id: { type: String, required: true }, // Belge ID'si olarak user ID kullan
-    messages: [{ type: String }], // Kullanıcının mesajlarını sakla
-  },
-  { timestamps: true }
-);
-const UserData = mongoose.model("UserData", UserDataSchema);
+
 
 // Token doğrulama middleware
 export const verifyToken = (req, res, next) => {
@@ -50,7 +43,7 @@ route.post("/generateText", verifyToken, async (req, res) => {
     // Token'dan alınan userId
     const userId = req.userId;
     // Kullanıcıya ait mesajları güncelle veya yeni bir kayıt oluştur
-    await UserData.updateOne(
+    await UserDataSema.updateOne(
       { _id: userId }, // Kullanıcı ID'sine göre güncelle veya oluştur
       { $push: { messages: generatedMessage } }, // Mesajları diziye ekle 
       { upsert: true } // Kayıt yoksa oluştur

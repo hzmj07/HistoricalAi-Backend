@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import bcrypt from "bcryptjs";
+
 
 // Kullanıcı Şeması
 const userSchema = new mongoose.Schema(
@@ -33,6 +33,18 @@ const userSchema = new mongoose.Schema(
 );
 // Şifreyi kaydetmeden önce hashleme
 
-  const User = mongoose.model('User', userSchema , 'users');
+const UserDataSchema = new mongoose.Schema(
+  {
+    _id: { type: String, required: true }, // Belge ID'si olarak user ID kullan
+    messages: [{ type: String }], // Kullanıcının mesajlarını sakla
+  },
+  { timestamps: true }
+);
+
+export const UserDataSema = mongoose.model("UserData", UserDataSchema);
+
+
   
-export default User;
+  export const User = mongoose.model('User', userSchema , 'users');
+  
+
