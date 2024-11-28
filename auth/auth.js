@@ -5,10 +5,14 @@ import argon2 from 'argon2';
 
 const router = express.Router();
 
+const mongoUri = process.env.JWT_ACCESS_TOKEN;
+
+
 // Register route
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
+
     if (!username || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
@@ -32,7 +36,7 @@ router.post('/register', async (req, res) => {
 // Login route
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-
+  console.log(mongoUri);
   if (!email || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -54,19 +58,23 @@ router.post("/login", async (req, res) => {
     // Token'ları oluştur
     const accessToken = jwt.sign(
       { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_ACCESS_TOKEN,
       { expiresIn: "1h" }
     );
 
     const refreshToken = jwt.sign(
       { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_ACCESS_TOKEN,
       { expiresIn: "48h" }
     );
-
+    console.log(accessToken , );
+    const TokenS = {
+      accessToken : accessToken,
+      refreshToken : refreshToken
+    }
+    
     res.status(200).json({
-      accessToken,
-      refreshToken,
+      TokenS,
       user,
       message: "Login successful",
     });
