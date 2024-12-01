@@ -36,11 +36,15 @@ const userSchema = new mongoose.Schema(
 const UserDataSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true }, // Belge ID'si olarak user ID kullan
-    messages: [{ type: String }], // Kullanıcının mesajlarını sakla
+    data: [
+      {
+        req: { type: String }, // İstek verisi
+        res: { type: String }, // Yanıt verisi
+      },
+    ], // Kullanıcının verilerini sakla
   },
   { timestamps: true }
 );
-
 export const UserDataSema = mongoose.model("UserData", UserDataSchema);
 
 
