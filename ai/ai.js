@@ -16,7 +16,7 @@ export const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token provided" });
+    return res.status(401).json({ message: "Unauthorized: No token provided" , success : false  });
   }
 
   try {
@@ -24,7 +24,7 @@ export const verifyToken = (req, res, next) => {
     req.userId = decoded.id; // Token'dan userId'yi al ve req.userId'ye ata
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    return res.status(401).json({ message: "Unauthorized: Invalid token" ,  success : false });
   }
 };
 
@@ -33,7 +33,7 @@ route.post("/generateText", verifyToken, async (req, res) => {
   const { pront } = req.body;
 
   if (!pront) {
-    return res.status(400).json({ message: "'pront' field is required" });
+    return res.status(400).json({ message: "'pront' field is required" , success : false  });
   }
 
   try {
@@ -48,9 +48,9 @@ route.post("/generateText", verifyToken, async (req, res) => {
       { $push: { messages: generatedMessage } }, // Mesajları diziye ekle 
       { upsert: true } // Kayıt yoksa oluştur
     );
-    res.status(200).json({ message: "Message saved successfully", data: generatedMessage });
+    res.status(200).json({ message: "Message saved successfully", data: generatedMessage , success : true  });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message  , success : false });
   }
 })
 
