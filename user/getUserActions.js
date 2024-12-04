@@ -18,11 +18,11 @@ histori.post('/actions', async (req, res) => {
 
     // Kullanıcı verisi yoksa
     if (!userData) {
-      return res.status(404).json({ message: 'No data found for this user' });
+      return res.status(200).json({ durum :"not found",message: 'No data found for this user' });
     }
 
     // `data` alanını döndür
-    return res.status(200).json({ data: userData.data });
+    return res.status(200).json({ durum :"data" ,data: userData.data });
   } catch (err) {
     // Hata durumunda
     res.status(500).json({ message: 'Server error', error: err.message });
