@@ -70,7 +70,8 @@ router.post("/login", async (req, res) => {
     console.log(accessToken , );
     const TokenS = {
       accessToken : accessToken,
-      refreshToken : refreshToken
+      refreshToken : refreshToken,
+      acsessTime: new Date().toISOString(),
     }
     
     res.status(200).json({
@@ -82,5 +83,49 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
+
+
+router.post("/refresh-token", async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token is required" });
+  }
+
+  try {
+    // Token doğrulama
+    const decoded = jwt.verify(refreshToken, process.env.JWT_ACCESS_TOKEN);
+
+    // Kullanıcıyı bul
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Yeni access token oluştur
+    const newAccessToken = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_ACCESS_TOKEN,
+      { expiresIn: "1h" }
+    );
+
+    // Yeni refresh token oluştur (opsiyonel)
+    const newRefreshToken = jwt.sign(
+      { id: user._id, username: user.username },
+      process.env.JWT_ACCESS_TOKEN,
+      { expiresIn: "48h" }
+    );
+
+    res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken, // İstersen kullanıcıya yeni refresh token gönder
+      acsessTime:  new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired refresh token", error: err.message });
+  }
+});
+
 
 export default router;
