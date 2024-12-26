@@ -33,18 +33,11 @@ const userSchema = new mongoose.Schema(
 );
 // Şifreyi kaydetmeden önce hashleme
 
-const UserDataSchema = new mongoose.Schema(
-  {
-    _id: { type: String, required: true }, // Belge ID'si olarak user ID kullan
-    data: [
-      {
-        req: { type: String }, // İstek verisi
-        res: { type: String }, // Yanıt verisi
-      },
-    ], // Kullanıcının verilerini sakla
-  },
-  { timestamps: true }
-);
+const UserDataSchema = mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  data: [{ req: String, res: String }], // Mesaj geçmişi
+  // ... diğer alanlarınız
+});
 export const UserDataSema = mongoose.model("UserData", UserDataSchema);
 
 
