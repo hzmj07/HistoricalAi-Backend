@@ -38,7 +38,21 @@ const UserDataSchema = mongoose.Schema({
   data: [{ req: String, res: String }], // Mesaj geçmişi
   // ... diğer alanlarınız
 });
+
+const chatSchema = new mongoose.Schema({
+  userId: { type: String, required: true, unique: true },
+  chatHistory: [
+    {
+      role: { type: String, required: true },
+      text: { type: String, required: true }
+    }
+  ]
+});
+
+
+
 export const UserDataSema = mongoose.model("UserData", UserDataSchema);
+export const Chat = mongoose.model("ChatData", chatSchema);
 
 
   
