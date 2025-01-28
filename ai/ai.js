@@ -82,6 +82,8 @@ route.post("/generateText", verifyToken, async (req, res) => {
 
 
 export const processDocument = async (fileBuffer, mimeType, prompt) => {
+  console.log(prompt);
+  
   console.log( "doc fun içindekiii data" , fileBuffer , mimeType);
   
   try {
@@ -183,7 +185,7 @@ route.post('/chat_with_ai', upload.single('file'), async (req, res) => {
       return data
     }
         
-    const no = file ? await Fille(file) :  await Filles();
+    const no = file ? await Fille(file , message) :  await Filles();
     saveUserMassage(no);
     
   
