@@ -7,29 +7,12 @@ const route = express.Router();
 const api = "AIzaSyA-HGFF6SL2-XFZVedFHj-su17VqoWRKPM"; // API anahtarınızı buraya ekleyin
 const genAI = new GoogleGenerativeAI(api);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
+import multer from 'multer';
 
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const generateResponse = async (chatHistory) => {
-  const contents = chatHistory.map(item => ({
-    role: item.role,   // 'user' ya da 'model'
-    parts : [{text : item.text}]   // Mesajın içeriği
-  }));  
-  try {
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${api}`,
-      {"contents"  : contents },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error with AI response:', error);
-    throw new Error('AI response error');
-  }
-};
 
 
 // Token doğrulama middleware
@@ -98,54 +81,116 @@ route.post("/generateText", verifyToken, async (req, res) => {
 });
 
 
+export const processDocument = async (fileBuffer, mimeType, prompt) => {
+  console.log( "doc fun içindekiii data" , fileBuffer , mimeType);
+  
+  try {
+    const filePart = {
+      inlineData: {
+        data: fileBuffer.toString("base64"),
+        mimeType: mimeType,
+      },
+    };
 
-route.post('/chat_with_ai', async (req, res) => {
+    const result = await model.generateContent([
+      prompt || "Analyize the document.",
+      filePart,
+    ]);
+    return result.response.text();
+  } catch (error) {
+    console.error("Doküman işleme hatası:", error);
+    throw new Error("Doküman analizi başarısız oldu");
+  }
+};
+
+const generateResponse = async (chatHistory) => {
+  const contents = chatHistory.map(item => ({
+    role: item.role,   // 'user' ya da 'model'
+    parts : [{text : item.text}]   // Mesajın içeriği
+  }));  
+  try {
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${api}`,
+      {"contents"  : contents },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error with AI response:', error);
+    throw new Error('AI response error');
+  }
+};
+
+
+const storage = multer.memoryStorage(); // Bellekte saklamak için
+const upload = multer({ storage });
+
+route.post('/chat_with_ai', upload.single('file'), async (req, res) => {
   try {
     const { message } = req.body;
-    
+    const file = req.file; // Form-data ile gelen dosya
+    console.log(file , message);
     if (!message) {
-      return res.status(400).json({ message: 'Message is required', success: false });
+      console.log("mesajı yokk");
+      res.status(400).json({ message: 'Mesaj--yok', success: false });
     }
-   const  id  =  req.userId;
+    const id = req.userId;
     // Kullanıcının sohbet geçmişini al
     const userChat = await Chat.findOne({ id });
-    console.log( "dattaaa " , userChat);
-    
+
     const chatHistory = userChat ? userChat.chatHistory : [];
-    
-    
-    // Yeni mesajı ekle
-    const newMessage = {
-      role: 'user',
-      text: message
-    };
 
-    chatHistory.push(newMessage);
-    console.log( "chatt" , chatHistory);
-    // Google AI API'ye istek at
-    const aiResponse = await generateResponse(chatHistory);
-    console.log( "textxxx" , aiResponse.candidates[0].content.parts[0].text)
+    const saveUserMassage = async  (message) =>{
+
+      const aiMessage = {
+        role: 'model',
+        text: message ||'No response from AI'
+      };
+  
+      chatHistory.push(aiMessage);
+  
+      // Kullanıcının sohbet geçmişini güncelle
+      await Chat.findOneAndUpdate(
+        { userId: id },
+        { chatHistory: chatHistory },
+        { upsert: true }
+      );
+      res.status(200).json({ message:message, success: true });
+
+    }
+
+    // Yeni mesajı ekle (eğer mesaj varsa)
+    const Filles = async()=>{
+      const newMessage = {
+          role: 'user',
+          text: message
+        };
+        console.log(newMessage);
+        
+        chatHistory.push(newMessage);
+  
+        const veri = await generateResponse(chatHistory);
+        return veri.candidates[0].content.parts[0].text
+    }
+
+    const Fille = async(x , message)=>{
+      
+      const data = processDocument(x.buffer , x.mimetype , message );
+      return data
+    }
+        
+    const no = file ? await Fille(file) :  await Filles();
+    saveUserMassage(no);
     
-    const aiMessage = {
-      role: 'model',
-      text: aiResponse.candidates[0].content.parts[0].text || 'No response from AI'
-    };
+  
 
-    chatHistory.push(aiMessage);
-
-    // Kullanıcının sohbet geçmişini güncelle
-    console.log("finalll dataaaaa" , chatHistory);
-    
-    await Chat.findOneAndUpdate(
-      { userId : id },
-      {chatHistory: chatHistory },
-      { upsert: true }
-    );
-
-    res.status(200).json({ message: aiMessage.text, success: true });
   } catch (err) {
     console.error('Error:', err);
-    res.status(500).json({ message: 'Server error', error: err.message, success: false });
+    res.status(300).json({ message: 'Server error', error: err.message, success: false });
   }
 });
 
