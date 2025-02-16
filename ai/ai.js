@@ -6,8 +6,6 @@ import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
 const route = express.Router();
-console.log("test kontrolksjfbgkldjbglkj" ,  process.env.API_KEY);
-
 const api =   process.env.API_KEY; // API anahtarınızı buraya ekleyin
 const genAI = new GoogleGenerativeAI(api);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
